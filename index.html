@@ -479,16 +479,17 @@
                     const { totalDeposits, totalWithdrawals, initialDeposit } = await fetchNetDeposits(trader.address);
                     const openOrders = await fetchOpenOrders(trader.address);
                     
-                    // Calculate ROI based on Total Deposits (more transparent)
-                    // ROI = (Current Balance - Total Deposits) / Total Deposits × 100
+                    // Calculate ROI based on Net Deposits (deposits minus withdrawals)
+                    // ROI = (Current Balance - Net Deposits) / Net Deposits × 100
                     let roi = 0;
+                    const netDeposits = totalDeposits - totalWithdrawals;
                     
-                    if (totalDeposits > 0) {
-                        roi = ((balance - totalDeposits) / totalDeposits) * 100;
+                    if (netDeposits > 0) {
+                        roi = ((balance - netDeposits) / netDeposits) * 100;
                     }
                     
                     // Add mids to each trader for rendering
-                    return { ...trader, balance, totalDeposits, initialDeposit, roi, positions, openOrders, mids: allMids };
+                    return { ...trader, balance, netDeposits, totalDeposits, totalWithdrawals, initialDeposit, roi, positions, openOrders, mids: allMids };
                 })
             );
 
@@ -502,7 +503,7 @@
             html += '<div>Trader</div>';
             html += '<div>Address</div>';
             html += '<div style="text-align: right;">Balance</div>';
-            html += '<div style="text-align: right;">Total Deps</div>';
+            html += '<div style="text-align: right;">Net Deps</div>';
             html += '<div style="text-align: right;">ROI</div>';
             html += '</div>';
             
@@ -514,7 +515,7 @@
                 if (trader.roi > 0) roiClass = 'positive';
                 else if (trader.roi < 0) roiClass = 'negative';
                 
-                const roiDisplay = trader.totalDeposits > 0 
+                const roiDisplay = trader.netDeposits > 0 
                     ? `${trader.roi > 0 ? '+' : ''}${trader.roi.toFixed(1)}%`
                     : 'N/A';
                 
@@ -525,7 +526,7 @@
                             <div class="trader-name">${trader.name}</div>
                             <div class="wallet-address">${trader.address}</div>
                             <div class="balance">${trader.balance.toFixed(2)}</div>
-                            <div class="total-deposits">${trader.totalDeposits.toFixed(2)}</div>
+                            <div class="total-deposits">${trader.netDeposits.toFixed(2)}</div>
                             <div class="roi ${roiClass}">${roiDisplay}</div>
                         </div>
                         <div class="positions-detail" id="trader-${index}"></div>
