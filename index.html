@@ -478,8 +478,30 @@
 
                     const latestAddress = trader.address[trader.address.length - 1];
                     const { balance, positions } = await fetchBalance(latestAddress);
-                    const { totalDeposits, totalWithdrawals, initialDeposit } = await fetchNetDeposits(trader.address[0]);
                     const openOrders = await fetchOpenOrders(latestAddress);
+
+                    let totalDeposits, totalWithdrawals, initialDeposit;
+
+                    if (trader.address.length === 1) {
+                        ({ totalDeposits, totalWithdrawals, initialDeposit } = await fetchNetDeposits(trader.address[0]));
+                    } else if (trader.address.length === 2) {
+                        const { 
+                            totalDeposits: firstAddressTotalDeposits, 
+                            totalWithdrawals: firstAddressTotalWithdrawals, 
+                            initialDeposit: firstAddressInitialDeposit
+                        } = await fetchNetDeposits(trader.address[0]);
+                        
+                        initialDeposit = firstAddressInitialDeposit;
+
+                        const { 
+                            totalDeposits: lastAddressTotalDeposits, 
+                            totalWithdrawals: lastAddressTotalWithdrawals
+                        } = await fetchNetDeposits(trader.address[1]);
+
+                        totalDeposits = firstAddressTotalDeposits + lastAddressTotalDeposits;
+                        totalWithdrawals = firstAddressTotalWithdrawals + lastAddressTotalWithdrawals;
+                    }
+                    
                     
                     // Calculate ROI based on Net Deposits (deposits minus withdrawals)
                     // ROI = (Current Balance - Net Deposits) / Net Deposits × 100
@@ -720,6 +742,7 @@
     </script>
 </body>
 </html>
+
 
 
 
